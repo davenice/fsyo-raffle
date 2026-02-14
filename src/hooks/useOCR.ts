@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import Tesseract from 'tesseract.js';
 
 export interface OCRResult {
@@ -24,6 +24,25 @@ export function useOCR(): UseOCRReturn {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
+  const workerRef = useRef<Tesseract.Worker | null>(null);
+
+  const getWorker = useCallback(async () => {
+    if (!workerRef.current) {
+      const worker = await Tesseract.createWorker('eng', undefined, {
+        logger: (m: { status: string; progress: number }) => {
+          if (m.status === 'recognizing text') {
+            setProgress(Math.round(m.progress * 100));
+          }
+        },
+      });
+      // Only recognize digits
+      await worker.setParameters({
+        tessedit_char_whitelist: '0123456789',
+      });
+      workerRef.current = worker;
+    }
+    return workerRef.current;
+  }, []);
 
   const recognize = useCallback(async (imageSource: string | HTMLCanvasElement, rectangle?: OCRRectangle): Promise<OCRResult | null> => {
     setIsProcessing(true);
@@ -31,39 +50,15 @@ export function useOCR(): UseOCRReturn {
     setProgress(0);
 
     try {
-      const result = await Tesseract.recognize(
-        imageSource,
-        'eng',
-        {
-          logger: (m: { status: string; progress: number }) => {
-            if (m.status === 'recognizing text') {
-              setProgress(Math.round(m.progress * 100));
-            }
-          },
-          ...(rectangle && { rectangle }),
-        } as unknown as Partial<Tesseract.WorkerOptions>
-      );
+      const worker = await getWorker();
+      const result = await worker.recognize(imageSource, { rectangle });
 
-      // Extract just numbers and common ticket characters
-      const rawText = result.data.text;
-      // Clean up: keep only numbers, letters, and common separators
-      const cleanedText = rawText
-        .replace(/[^0-9A-Za-z\-]/g, ' ')
-        .split(/\s+/)
-        .filter((word) => word.length > 0)
-        .join(' ')
-        .trim();
-
-      // Try to find the most likely ticket number (longest numeric sequence)
-      const numbers = rawText.match(/\d+/g) || [];
-      const bestNumber = numbers.reduce((best, current) =>
-        current.length > best.length ? current : best,
-        ''
-      );
+      // Clean up the result - remove whitespace
+      const text = result.data.text.replace(/\s+/g, '').trim();
 
       setIsProcessing(false);
       return {
-        text: bestNumber || cleanedText,
+        text,
         confidence: result.data.confidence,
       };
     } catch (err) {
@@ -72,7 +67,7 @@ export function useOCR(): UseOCRReturn {
       setIsProcessing(false);
       return null;
     }
-  }, []);
+  }, [getWorker]);
 
   return {
     recognize,
