@@ -130,6 +130,34 @@ body {
   color: #000;
 }
 
+.scan-button {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1rem;
+  padding: 0.4rem 1rem;
+  border: 1px solid #0f0;
+  background: #000;
+  color: #0f0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.scan-button:hover {
+  background: #0f0;
+  color: #000;
+}
+
+.scanner-loading {
+  position: fixed;
+  inset: 0;
+  background: #0a0a0a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0f0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1.2rem;
+}
+
 /* Winners Display - bulk of page */
 .winners-display {
   flex: 1;

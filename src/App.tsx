@@ -1,7 +1,9 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, lazy, Suspense } from 'react';
 import { COLOURS } from './types';
 import type { RaffleColour, RaffleTicket } from './types';
 import './App.css';
+
+const Scanner = lazy(() => import('./components/Scanner/Scanner').then(m => ({ default: m.Scanner })));
 
 function App() {
   const [tickets, setTickets] = useState<RaffleTicket[]>([]);
@@ -9,6 +11,7 @@ function App() {
   const [selectedColour, setSelectedColour] = useState<RaffleColour>('Red');
   const [nextId, setNextId] = useState(1);
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const groupedTickets = COLOURS
@@ -50,6 +53,16 @@ function App() {
     setTickets(tickets.filter((t) => t.id !== id));
   };
 
+  const handleScanComplete = (number: string, colour: RaffleColour) => {
+    const newTicket: RaffleTicket = {
+      id: nextId,
+      number: number.trim(),
+      colour: colour,
+    };
+    setTickets([...tickets, newTicket]);
+    setNextId(nextId + 1);
+  };
+
   return (
     <div className="app">
       <div className={`header ${headerCollapsed ? 'collapsed' : ''}`}>
@@ -89,6 +102,9 @@ function App() {
             <button type="button" onClick={handleAddTicket} className="add-button">
               [+] Add
             </button>
+            <button type="button" onClick={() => setScannerOpen(true)} className="scan-button">
+              Scan
+            </button>
           </div>
         )}
       </div>
@@ -125,6 +141,16 @@ function App() {
           </div>
         )}
       </div>
+
+      {scannerOpen && (
+        <Suspense fallback={<div className="scanner-loading">Loading scanner...</div>}>
+          <Scanner
+            onScanComplete={handleScanComplete}
+            onClose={() => setScannerOpen(false)}
+            defaultColour={selectedColour}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
