@@ -4,6 +4,72 @@ import { COLOURS } from '../../types';
 import type { RaffleColour } from '../../types';
 import './Scanner.css';
 
+// RGB values for each raffle color (matching CSS variables)
+const COLOUR_RGB: Record<RaffleColour, [number, number, number]> = {
+  Red: [229, 57, 53],      // #e53935
+  Blue: [30, 136, 229],    // #1e88e5
+  Green: [67, 160, 71],    // #43a047
+  Yellow: [253, 216, 53],  // #fdd835
+  Orange: [251, 140, 0],   // #fb8c00
+  Purple: [142, 36, 170],  // #8e24aa
+  Pink: [216, 27, 96],     // #d81b60
+  White: [245, 245, 245],  // #f5f5f5
+};
+
+function detectColour(ctx: CanvasRenderingContext2D, rect: { left: number; top: number; width: number; height: number }): RaffleColour {
+  // Sample pixels from the scan region
+  const sampleSize = 20;
+  let totalR = 0, totalG = 0, totalB = 0, count = 0;
+
+  // Sample from edges of the rectangle (where ticket color is likely visible)
+  const samplePoints: [number, number][] = [];
+
+  // Top and bottom edges
+  for (let i = 0; i < sampleSize; i++) {
+    const x = rect.left + (rect.width * i) / sampleSize;
+    samplePoints.push([x, rect.top + 5]);  // Near top edge
+    samplePoints.push([x, rect.top + rect.height - 5]);  // Near bottom edge
+  }
+
+  // Left and right edges
+  for (let i = 0; i < sampleSize; i++) {
+    const y = rect.top + (rect.height * i) / sampleSize;
+    samplePoints.push([rect.left + 5, y]);  // Near left edge
+    samplePoints.push([rect.left + rect.width - 5, y]);  // Near right edge
+  }
+
+  for (const [x, y] of samplePoints) {
+    const pixel = ctx.getImageData(Math.round(x), Math.round(y), 1, 1).data;
+    totalR += pixel[0];
+    totalG += pixel[1];
+    totalB += pixel[2];
+    count++;
+  }
+
+  const avgR = totalR / count;
+  const avgG = totalG / count;
+  const avgB = totalB / count;
+
+  // Find closest color using Euclidean distance
+  let closestColour: RaffleColour = 'White';
+  let minDistance = Infinity;
+
+  for (const colour of COLOURS) {
+    const [r, g, b] = COLOUR_RGB[colour];
+    const distance = Math.sqrt(
+      Math.pow(avgR - r, 2) +
+      Math.pow(avgG - g, 2) +
+      Math.pow(avgB - b, 2)
+    );
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestColour = colour;
+    }
+  }
+
+  return closestColour;
+}
+
 interface ScannerProps {
   onScanComplete: (number: string, colour: RaffleColour) => void;
   onClose: () => void;
@@ -128,11 +194,15 @@ export function Scanner({ onScanComplete, onClose, defaultColour }: ScannerProps
 
     setStatus('processing');
 
+    // Detect ticket color from the scan region
+    const detectedColour = detectColour(ctx, rectangle);
+
     // Run OCR with rectangle constraint
     const result = await recognize(canvas, rectangle);
 
     if (result && result.text) {
       setScannedNumber(result.text);
+      setSelectedColour(detectedColour);
       setStatus('confirm');
       // Vibrate on success if supported
       if (navigator.vibrate) {
