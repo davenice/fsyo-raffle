@@ -78,6 +78,7 @@ function App() {
         </div>
         {!headerCollapsed && (
           <div className="entry-form">
+            ||
             <input
               ref={inputRef}
               type="text"
@@ -100,11 +101,12 @@ function App() {
               ))}
             </select>
             <button type="button" onClick={handleAddTicket} className="add-button">
-              [+] Add
-            </button>
+              [🖋️] Add
+            </button>||
             <button type="button" onClick={() => setScannerOpen(true)} className="scan-button">
-              Scan
+              [📷] Scan
             </button>
+            ||
           </div>
         )}
       </div>
