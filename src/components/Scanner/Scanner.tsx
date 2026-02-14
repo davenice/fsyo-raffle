@@ -315,7 +315,6 @@ export function Scanner({ onScanComplete, onClose, defaultColour }: ScannerProps
                 className="scanned-number-input"
                 value={scannedNumber}
                 onChange={(e) => setScannedNumber(e.target.value)}
-                autoFocus
               />
 
               <div className="colour-picker">
