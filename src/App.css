@@ -146,6 +146,24 @@ body {
   color: #000;
 }
 
+.export-button,
+.import-button {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1rem;
+  padding: 0.4rem 1rem;
+  border: 1px solid #0f0;
+  background: #000;
+  color: #0f0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.export-button:hover,
+.import-button:hover {
+  background: #0f0;
+  color: #000;
+}
+
 .scanner-loading {
   position: fixed;
   inset: 0;

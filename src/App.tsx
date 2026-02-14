@@ -4,6 +4,8 @@ import type { RaffleColour, RaffleTicket } from './types';
 import './App.css';
 
 const Scanner = lazy(() => import('./components/Scanner/Scanner').then(m => ({ default: m.Scanner })));
+const QRExport = lazy(() => import('./components/QRExport/QRExport').then(m => ({ default: m.QRExport })));
+const QRImport = lazy(() => import('./components/QRImport/QRImport').then(m => ({ default: m.QRImport })));
 
 function App() {
   const [tickets, setTickets] = useState<RaffleTicket[]>([]);
@@ -12,6 +14,8 @@ function App() {
   const [nextId, setNextId] = useState(1);
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [qrExportOpen, setQRExportOpen] = useState(false);
+  const [qrImportOpen, setQRImportOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const groupedTickets = COLOURS
@@ -63,6 +67,16 @@ function App() {
     setNextId(nextId + 1);
   };
 
+  const handleImportTickets = (imported: RaffleTicket[]) => {
+    const newTickets = imported.map((t, i) => ({
+      ...t,
+      id: nextId + i,
+    }));
+    setTickets([...tickets, ...newTickets]);
+    setNextId(nextId + imported.length);
+    setQRImportOpen(false);
+  };
+
   return (
     <div className="app">
       <div className={`header ${headerCollapsed ? 'collapsed' : ''}`}>
@@ -105,6 +119,13 @@ function App() {
             </button>||
             <button type="button" onClick={() => setScannerOpen(true)} className="scan-button">
               [📷] Scan
+            </button>
+            ||
+            <button type="button" onClick={() => setQRExportOpen(true)} className="export-button">
+              [↗] Export
+            </button>
+            <button type="button" onClick={() => setQRImportOpen(true)} className="import-button">
+              [↙] Import
             </button>
             ||
           </div>
@@ -151,6 +172,18 @@ function App() {
             onClose={() => setScannerOpen(false)}
             defaultColour={selectedColour}
           />
+        </Suspense>
+      )}
+
+      {qrExportOpen && (
+        <Suspense fallback={<div className="scanner-loading">Loading...</div>}>
+          <QRExport tickets={tickets} onClose={() => setQRExportOpen(false)} />
+        </Suspense>
+      )}
+
+      {qrImportOpen && (
+        <Suspense fallback={<div className="scanner-loading">Loading...</div>}>
+          <QRImport onImport={handleImportTickets} onClose={() => setQRImportOpen(false)} />
         </Suspense>
       )}
     </div>

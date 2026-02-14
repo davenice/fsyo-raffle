@@ -1,0 +1,196 @@
+.qr-import-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: #0a0a0a;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.qr-import-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid #0f0;
+  background: #111;
+}
+
+.qr-import-title {
+  color: #0f0;
+  font-size: 1rem;
+  text-shadow: 0 0 10px #0f0;
+}
+
+.qr-import-close {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #0f0;
+  background: transparent;
+  color: #0f0;
+  cursor: pointer;
+}
+
+.qr-import-close:hover {
+  background: #0f0;
+  color: #000;
+}
+
+.qr-import-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Reuse camera container styles */
+.qr-import-modal .camera-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #000;
+}
+
+.qr-import-modal .camera-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.qr-import-modal .camera-canvas {
+  display: none;
+}
+
+/* QR scan region - square for QR codes */
+.qr-scan-region {
+  width: 250px;
+  height: 250px;
+  border: 2px dashed #0f0;
+  position: relative;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+}
+
+/* Reuse overlay styles from Scanner */
+.qr-import-modal .scan-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.qr-import-modal .scan-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: #0f0;
+  border-style: solid;
+}
+
+.qr-import-modal .scan-corner.top-left {
+  top: -2px;
+  left: -2px;
+  border-width: 3px 0 0 3px;
+}
+
+.qr-import-modal .scan-corner.top-right {
+  top: -2px;
+  right: -2px;
+  border-width: 3px 3px 0 0;
+}
+
+.qr-import-modal .scan-corner.bottom-left {
+  bottom: -2px;
+  left: -2px;
+  border-width: 0 0 3px 3px;
+}
+
+.qr-import-modal .scan-corner.bottom-right {
+  bottom: -2px;
+  right: -2px;
+  border-width: 0 3px 3px 0;
+}
+
+.qr-import-modal .scan-hint {
+  color: #0f0;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  text-shadow: 0 0 10px #0f0;
+  text-align: center;
+}
+
+/* Overlay messages */
+.qr-import-modal .scanner-overlay-message {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.8);
+  color: #0f0;
+  font-size: 1.2rem;
+  text-shadow: 0 0 10px #0f0;
+}
+
+.qr-import-modal .scanner-overlay-message.error {
+  color: #f44;
+  text-shadow: 0 0 10px #f44;
+}
+
+.qr-import-modal .scanner-overlay-message p {
+  margin: 0 0 1rem 0;
+  padding: 0 1rem;
+  text-align: center;
+}
+
+/* Scanner button styles */
+.qr-import-modal .scanner-button {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1.1rem;
+  padding: 0.75rem 1.5rem;
+  border: 2px solid #0f0;
+  background: #000;
+  color: #0f0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.qr-import-modal .scanner-button:hover,
+.qr-import-modal .scanner-button:active {
+  background: #0f0;
+  color: #000;
+}
+
+.qr-import-modal .scanner-button.confirm {
+  background: #0f0;
+  color: #000;
+}
+
+/* Success overlay */
+.import-success-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.import-count {
+  color: #0f0;
+  font-size: 1rem;
+  margin: 0 0 2rem 0;
+  text-shadow: 0 0 10px #0f0;
+}
+
+.import-actions {
+  display: flex;
+  gap: 1rem;
+}
