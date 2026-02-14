@@ -16,7 +16,7 @@ export function Scanner({ onScanComplete, onClose, defaultColour }: ScannerProps
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const scanRegionRef = useRef<HTMLDivElement>(null);
 
   const [status, setStatus] = useState<ScanStatus>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -78,13 +78,12 @@ export function Scanner({ onScanComplete, onClose, defaultColour }: ScannerProps
   }, []);
 
   const captureAndRecognize = useCallback(async () => {
-    if (!videoRef.current || !canvasRef.current || !containerRef.current) return;
+    if (!videoRef.current || !canvasRef.current || !scanRegionRef.current) return;
 
     setStatus('capturing');
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    const container = containerRef.current;
     const ctx = canvas.getContext('2d');
 
     if (!ctx) return;
@@ -94,42 +93,37 @@ export function Scanner({ onScanComplete, onClose, defaultColour }: ScannerProps
     canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0);
 
-    // Get the displayed video dimensions (may differ from actual video due to object-fit: cover)
-    const containerRect = container.getBoundingClientRect();
-    const containerWidth = containerRect.width;
-    const containerHeight = containerRect.height;
+    // Get the actual position of the scan region element and video element
+    const videoRect = video.getBoundingClientRect();
+    const scanRect = scanRegionRef.current.getBoundingClientRect();
 
-    // Calculate scan region in display coordinates (matches CSS: 80% width, max 300px, aspect-ratio 2:1)
-    const scanRegionWidth = Math.min(containerWidth * 0.8, 300);
-    const scanRegionHeight = scanRegionWidth / 2;
-    const scanRegionX = (containerWidth - scanRegionWidth) / 2;
-    const scanRegionY = (containerHeight - scanRegionHeight) / 2;
+    // Calculate where scan region is relative to the video element
+    const relativeLeft = scanRect.left - videoRect.left;
+    const relativeTop = scanRect.top - videoRect.top;
 
-    // Calculate scale factors between display and actual video
+    // Calculate scale between displayed video and actual video pixels
+    // object-fit: cover scales video to fill container, cropping overflow
     const videoAspect = video.videoWidth / video.videoHeight;
-    const containerAspect = containerWidth / containerHeight;
+    const displayAspect = videoRect.width / videoRect.height;
 
-    let scaleX: number, scaleY: number, offsetX = 0, offsetY = 0;
+    let scale: number, offsetX = 0, offsetY = 0;
 
-    // object-fit: cover means video is scaled to fill container, cropping overflow
-    if (videoAspect > containerAspect) {
-      // Video is wider - height fits, width is cropped
-      scaleY = video.videoHeight / containerHeight;
-      scaleX = scaleY;
-      offsetX = (video.videoWidth - containerWidth * scaleX) / 2;
+    if (videoAspect > displayAspect) {
+      // Video is wider - scaled by height, width is cropped
+      scale = video.videoHeight / videoRect.height;
+      offsetX = (video.videoWidth - videoRect.width * scale) / 2;
     } else {
-      // Video is taller - width fits, height is cropped
-      scaleX = video.videoWidth / containerWidth;
-      scaleY = scaleX;
-      offsetY = (video.videoHeight - containerHeight * scaleY) / 2;
+      // Video is taller - scaled by width, height is cropped
+      scale = video.videoWidth / videoRect.width;
+      offsetY = (video.videoHeight - videoRect.height * scale) / 2;
     }
 
-    // Convert scan region to video coordinates for Tesseract rectangle
+    // Convert scan region to video pixel coordinates
     const rectangle = {
-      left: Math.round(offsetX + scanRegionX * scaleX),
-      top: Math.round(offsetY + scanRegionY * scaleY),
-      width: Math.round(scanRegionWidth * scaleX),
-      height: Math.round(scanRegionHeight * scaleY),
+      left: Math.round(offsetX + relativeLeft * scale),
+      top: Math.round(offsetY + relativeTop * scale),
+      width: Math.round(scanRect.width * scale),
+      height: Math.round(scanRect.height * scale),
     };
 
     setStatus('processing');
@@ -187,14 +181,14 @@ export function Scanner({ onScanComplete, onClose, defaultColour }: ScannerProps
 
       <div className="scanner-content">
         {/* Camera view */}
-        <div className="camera-container" ref={containerRef}>
+        <div className="camera-container">
           <video ref={videoRef} className="camera-video" playsInline muted />
           <canvas ref={canvasRef} className="camera-canvas" />
 
           {/* Scan region overlay */}
           {status === 'ready' && (
             <div className="scan-overlay">
-              <div className="scan-region">
+              <div className="scan-region" ref={scanRegionRef}>
                 <div className="scan-corner top-left" />
                 <div className="scan-corner top-right" />
                 <div className="scan-corner bottom-left" />
