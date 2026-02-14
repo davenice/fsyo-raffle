@@ -310,7 +310,13 @@ export function Scanner({ onScanComplete, onClose, defaultColour }: ScannerProps
 
           {status === 'confirm' && (
             <div className="confirm-panel">
-              <p className="scanned-number">{scannedNumber}</p>
+              <input
+                type="text"
+                className="scanned-number-input"
+                value={scannedNumber}
+                onChange={(e) => setScannedNumber(e.target.value)}
+                autoFocus
+              />
 
               <div className="colour-picker">
                 {COLOURS.map((colour) => (
